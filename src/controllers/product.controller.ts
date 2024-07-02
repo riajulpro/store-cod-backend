@@ -96,7 +96,7 @@ export const getProductByIdController = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
-      const product = await Product.findById(id);
+      const product = await Product.findById(id).populate("category", ["label", "value"]);
 
       if (!product) {
         return sendResponse(res, {

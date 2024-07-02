@@ -3,6 +3,7 @@ import authRoute from "./auth.route";
 import category from "./category.route";
 import products from "./product.route";
 import review from "./review.route";
+import sell from "./sell.route";
 const router = express.Router();
 
 const moduleRoute = [
@@ -21,6 +22,10 @@ const moduleRoute = [
   {
     path: "/review",
     route: review,
+  },
+  {
+    path: "/sell",
+    route: sell,
   },
 ];
 
