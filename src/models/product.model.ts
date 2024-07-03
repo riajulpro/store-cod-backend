@@ -12,11 +12,11 @@ const productSchema = new mongoose.Schema({
   category: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
-    ref: "Category"
+    ref: "Category",
   },
   description: {
     type: String,
-    required: true
+    required: true,
   },
   stock: {
     type: Number,
@@ -41,7 +41,12 @@ const productSchema = new mongoose.Schema({
   service: {
     type: Object,
     // required: true,
-  }
+  },
+  averageRating: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
 });
 
 const Product = mongoose.model("Product", productSchema);
