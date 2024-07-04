@@ -15,11 +15,13 @@ const customerSchema = new mongoose.Schema({
   },
   contactNumber: {
     type: String,
-    required: true,
+    required: false,
+    default: "",
   },
   address: {
     type: String,
-    required: true,
+    required: false,
+    default: "",
   },
 });
 

@@ -6,13 +6,23 @@ import Authentication from "../models/auth.model";
 import Customer from "../models/customer.model";
 import Owner from "../models/owner.model";
 import Staff from "../models/staff.model";
-import { createAcessToken } from "../utils/jwtToken";
+import { createAcessToken, createRefreshToken } from "../utils/jwtToken";
 import sendMessage from "../utils/sendMessage";
 import sendResponse from "../utils/sendResponse";
 
 export const createCustomerController = catchAsyncError(async (req, res) => {
   const { body } = req;
-  const auth = await Authentication.create(body);
+
+  const isExistCustomer = await Authentication.findOne({ email: body.email });
+  if (isExistCustomer) {
+    return sendResponse(res, {
+      success: false,
+      data: null,
+      message: "A account already exist in this email",
+    });
+  }
+
+  const auth = await Authentication.create({ ...body, role: "customer" });
   const customer = Customer.create({ ...body, auth: auth._id });
 
   const token = createAcessToken(
@@ -23,9 +33,10 @@ export const createCustomerController = catchAsyncError(async (req, res) => {
     },
     "1h"
   );
+
   res.json({
     data: customer,
-    message: "staff created successfully",
+    message: "Customer created successfully",
     success: true,
     accessToken: token,
   });
@@ -61,6 +72,17 @@ export const loginController = catchAsyncError(async (req, res) => {
     });
   }
 
+  const isPasswordMatched = await bcrypt.compare(
+    password,
+    isExistUser.password
+  );
+  if (!isPasswordMatched) {
+    return sendResponse(res, {
+      message: "password didn't matched",
+      success: false,
+      data: null,
+    });
+  }
   let user = undefined;
   const role = isExistUser.role;
   if (role === "customer") {
@@ -81,11 +103,18 @@ export const loginController = catchAsyncError(async (req, res) => {
     },
     "1h"
   );
+
+  const refreshToken = createRefreshToken({
+    email: isExistUser.email,
+    userId: isExistUser._id,
+    role: isExistUser.role,
+  });
   res.json({
-    data: user,
-    message: "staff created successfully",
+    data: { ...user, role: isExistUser.role },
+    message: "Login successfull",
     success: true,
     accessToken: token,
+    refreshToken,
   });
 });
 
