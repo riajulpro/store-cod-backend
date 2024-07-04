@@ -25,7 +25,15 @@ const sendMessage_1 = __importDefault(require("../utils/sendMessage"));
 const sendResponse_1 = __importDefault(require("../utils/sendResponse"));
 exports.createCustomerController = (0, catchAsyncErrors_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { body } = req;
-    const auth = yield auth_model_1.default.create(body);
+    const isExistCustomer = yield auth_model_1.default.findOne({ email: body.email });
+    if (isExistCustomer) {
+        return (0, sendResponse_1.default)(res, {
+            success: false,
+            data: null,
+            message: "A account already exist in this email",
+        });
+    }
+    const auth = yield auth_model_1.default.create(Object.assign(Object.assign({}, body), { role: "customer" }));
     const customer = customer_model_1.default.create(Object.assign(Object.assign({}, body), { auth: auth._id }));
     const token = (0, jwtToken_1.createAcessToken)({
         email: auth.email,
@@ -34,7 +42,7 @@ exports.createCustomerController = (0, catchAsyncErrors_1.default)((req, res) =>
     }, "1h");
     res.json({
         data: customer,
-        message: "staff created successfully",
+        message: "Customer created successfully",
         success: true,
         accessToken: token,
     });
@@ -66,6 +74,14 @@ exports.loginController = (0, catchAsyncErrors_1.default)((req, res) => __awaite
             statusCode: 404,
         });
     }
+    const isPasswordMatched = yield bcrypt_1.default.compare(password, isExistUser.password);
+    if (!isPasswordMatched) {
+        return (0, sendResponse_1.default)(res, {
+            message: "password didn't matched",
+            success: false,
+            data: null,
+        });
+    }
     let user = undefined;
     const role = isExistUser.role;
     if (role === "customer") {
@@ -82,11 +98,17 @@ exports.loginController = (0, catchAsyncErrors_1.default)((req, res) => __awaite
         userId: isExistUser._id,
         role: isExistUser.role,
     }, "1h");
+    const refreshToken = (0, jwtToken_1.createRefreshToken)({
+        email: isExistUser.email,
+        userId: isExistUser._id,
+        role: isExistUser.role,
+    });
     res.json({
-        data: user,
-        message: "staff created successfully",
+        data: Object.assign(Object.assign({}, user), { role: isExistUser.role }),
+        message: "Login successfull",
         success: true,
         accessToken: token,
+        refreshToken,
     });
 }));
 exports.resetPassword = (0, catchAsyncErrors_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {

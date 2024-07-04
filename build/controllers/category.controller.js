@@ -55,7 +55,7 @@ exports.getAllCategoriesController = (0, catchAsyncErrors_1.default)((req, res, 
             statusCode: 200,
             success: true,
             message: "Categories fetched successfully",
-            data: categories,
+            data: categories
         });
     }
     catch (error) {

@@ -8,6 +8,7 @@ const auth_route_1 = __importDefault(require("./auth.route"));
 const category_route_1 = __importDefault(require("./category.route"));
 const product_route_1 = __importDefault(require("./product.route"));
 const review_route_1 = __importDefault(require("./review.route"));
+const sell_route_1 = __importDefault(require("./sell.route"));
 const router = express_1.default.Router();
 const moduleRoute = [
     {
@@ -25,6 +26,10 @@ const moduleRoute = [
     {
         path: "/review",
         route: review_route_1.default,
+    },
+    {
+        path: "/sell",
+        route: sell_route_1.default,
     },
 ];
 moduleRoute.forEach((route) => router.use(route.path, route.route));

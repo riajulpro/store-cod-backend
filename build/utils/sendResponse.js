@@ -5,6 +5,7 @@ const sendResponse = (res, data) => {
         success: data.success,
         message: data.message,
         data: data.data,
+        total: data.total,
         error: data.error,
     });
 };

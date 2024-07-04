@@ -19,11 +19,13 @@ const customerSchema = new mongoose_1.default.Schema({
     },
     contactNumber: {
         type: String,
-        required: true,
+        required: false,
+        default: "",
     },
     address: {
         type: String,
-        required: true,
+        required: false,
+        default: "",
     },
 });
 const Customer = mongoose_1.default.model("Customer", customerSchema);

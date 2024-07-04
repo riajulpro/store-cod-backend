@@ -16,6 +16,11 @@ const productSchema = new mongoose_1.default.Schema({
     category: {
         type: mongoose_1.default.Schema.Types.ObjectId,
         required: true,
+        ref: "Category",
+    },
+    description: {
+        type: String,
+        required: true,
     },
     stock: {
         type: Number,
@@ -40,7 +45,17 @@ const productSchema = new mongoose_1.default.Schema({
     service: {
         type: Object,
         // required: true,
-    }
+    },
+    averageRating: {
+        type: Number,
+        required: false,
+        default: 0,
+    },
+    tag: {
+        type: String,
+        required: false,
+        default: "",
+    },
 });
 const Product = mongoose_1.default.model("Product", productSchema);
 exports.default = Product;

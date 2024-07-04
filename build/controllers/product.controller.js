@@ -61,6 +61,11 @@ exports.createProductController = (0, catchAsyncErrors_1.default)((req, res, nex
 }));
 exports.getAllProductsController = (0, catchAsyncErrors_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        const baseQueryBuilder = new QueryBuilder_1.default(product_model_1.default.find(), req.query)
+            .search(["name", "brand"])
+            .filter();
+        const totalDocuments = yield baseQueryBuilder.modelQuery.countDocuments();
+        console.log("aaa total", totalDocuments);
         const queryBuilder = new QueryBuilder_1.default(product_model_1.default.find(), req.query)
             .search(["name", "brand"])
             .filter()
@@ -71,11 +76,13 @@ exports.getAllProductsController = (0, catchAsyncErrors_1.default)((req, res, ne
         (0, sendResponse_1.default)(res, {
             statusCode: 200,
             success: true,
-            message: "Products fetched successfully",
+            message: "Products fetched successfully ff",
             data: products,
+            total: totalDocuments
         });
     }
     catch (error) {
+        console.log("Error fetching products:", error);
         (0, sendResponse_1.default)(res, {
             statusCode: 500,
             success: false,
@@ -88,7 +95,7 @@ exports.getAllProductsController = (0, catchAsyncErrors_1.default)((req, res, ne
 exports.getProductByIdController = (0, catchAsyncErrors_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const product = yield product_model_1.default.findById(id);
+        const product = yield product_model_1.default.findById(id).populate("category", ["label", "value"]);
         if (!product) {
             return (0, sendResponse_1.default)(res, {
                 statusCode: 404,

@@ -13,6 +13,10 @@ const categorySchema = new mongoose_1.default.Schema({
         type: String,
         required: true,
     },
+    image: {
+        type: String,
+        required: true,
+    },
 });
 const Category = mongoose_1.default.model("Category", categorySchema);
 exports.default = Category;

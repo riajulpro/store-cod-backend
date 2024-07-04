@@ -1,9 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const mongoose_1 = require("mongoose");
 class QueryBuilder {
     constructor(modelQuery, query) {
         this.modelQuery = modelQuery;
         this.query = query;
+        console.log("Initial query:", this.query);
     }
     search(searchableFields) {
         const searchTerm = this.query.searchTerm;
@@ -18,18 +20,56 @@ class QueryBuilder {
     }
     filter() {
         const queryObj = Object.assign({}, this.query);
-        // Filtering
-        const excludeFields = ["searchTerm", "sort", "limit", "page", "fields"];
+        const excludeFields = [
+            "searchTerm",
+            "sort",
+            "limit",
+            "page",
+            "fields",
+            "minPrice",
+            "maxPrice",
+        ];
         excludeFields.forEach((el) => delete queryObj[el]);
+        if (queryObj.category) {
+            queryObj.category = new mongoose_1.Types.ObjectId(queryObj.category);
+        }
         let queryStr = JSON.stringify(queryObj);
         queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
         this.modelQuery = this.modelQuery.find(JSON.parse(queryStr));
+        console.log("Query after general filtering:", queryStr);
+        // Price filtering
+        if (this.query.minPrice || this.query.maxPrice) {
+            const priceFilter = {};
+            if (this.query.minPrice) {
+                priceFilter.$gte = Number(this.query.minPrice);
+            }
+            if (this.query.maxPrice) {
+                priceFilter.$lte = Number(this.query.maxPrice);
+            }
+            this.modelQuery = this.modelQuery.find({
+                price: priceFilter,
+            });
+        }
         return this;
     }
     sort() {
-        var _a, _b;
-        const sort = ((_b = (_a = this.query.sort) === null || _a === void 0 ? void 0 : _a.split(",")) === null || _b === void 0 ? void 0 : _b.join(" ")) || "-createdAt";
-        this.modelQuery = this.modelQuery.sort(sort);
+        let sortBy = "-createdAt";
+        if (this.query.sort) {
+            switch (this.query.sort) {
+                case "price-asc":
+                    sortBy = "discountPrice";
+                    break;
+                case "price-desc":
+                    sortBy = "-discountPrice";
+                    break;
+                case "rating":
+                    sortBy = "-rating";
+                    break;
+                default:
+                    sortBy = this.query.sort;
+            }
+        }
+        this.modelQuery = this.modelQuery.sort(sortBy);
         return this;
     }
     paginate() {
@@ -47,3 +87,8 @@ class QueryBuilder {
     }
 }
 exports.default = QueryBuilder;
+// case "price-asc":
+//   sortBy = "discountPrice";
+//   break;
+// case "price-desc":
+//   sortBy = "-discountPrice";
