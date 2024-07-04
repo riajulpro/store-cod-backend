@@ -45,12 +45,13 @@ export const getAllCategoriesController = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const categories = await Category.find();
+      
 
       sendResponse(res, {
         statusCode: 200,
         success: true,
         message: "Categories fetched successfully",
-        data: categories,
+        data: categories
       });
     } catch (error) {
       sendResponse(res, {

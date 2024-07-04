@@ -1,4 +1,4 @@
-import { FilterQuery, Query } from "mongoose";
+import { FilterQuery, Query, Types } from "mongoose";
 
 class QueryBuilder<T> {
   public modelQuery: Query<T[], T>;
@@ -7,6 +7,7 @@ class QueryBuilder<T> {
   constructor(modelQuery: Query<T[], T>, query: Record<string, unknown>) {
     this.modelQuery = modelQuery;
     this.query = query;
+    console.log("Initial query:", this.query);
   }
 
   search(searchableFields: string[]) {
@@ -27,20 +28,61 @@ class QueryBuilder<T> {
   filter() {
     const queryObj = { ...this.query };
 
-    // Filtering
-    const excludeFields = ["searchTerm", "sort", "limit", "page", "fields"];
+    const excludeFields = [
+      "searchTerm",
+      "sort",
+      "limit",
+      "page",
+      "fields",
+      "minPrice",
+      "maxPrice",
+    ];
     excludeFields.forEach((el) => delete queryObj[el]);
+
+    if (queryObj.category) {
+      queryObj.category = new Types.ObjectId(queryObj.category as string);
+    }
 
     let queryStr = JSON.stringify(queryObj);
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
     this.modelQuery = this.modelQuery.find(JSON.parse(queryStr));
+    console.log("Query after general filtering:", queryStr);
+
+    // Price filtering
+    if (this.query.minPrice || this.query.maxPrice) {
+      const priceFilter: Record<string, unknown> = {};
+      if (this.query.minPrice) {
+        priceFilter.$gte = Number(this.query.minPrice);
+      }
+      if (this.query.maxPrice) {
+        priceFilter.$lte = Number(this.query.maxPrice);
+      }
+      this.modelQuery = this.modelQuery.find({
+        price: priceFilter,
+      });
+    }
 
     return this;
   }
 
   sort() {
-    const sort = (this.query.sort as string)?.split(",")?.join(" ") || "-createdAt";
-    this.modelQuery = this.modelQuery.sort(sort);
+    let sortBy = "-createdAt";
+    if (this.query.sort) {
+      switch (this.query.sort) {
+        case "price-asc":
+          sortBy = "discountPrice";
+          break;
+        case "price-desc":
+          sortBy = "-discountPrice";
+          break;
+        case "rating":
+          sortBy = "-rating";
+          break;
+        default:
+          sortBy = this.query.sort as string;
+      }
+    }
+    this.modelQuery = this.modelQuery.sort(sortBy);
     return this;
   }
 
@@ -54,10 +96,17 @@ class QueryBuilder<T> {
   }
 
   fields() {
-    const fields = (this.query.fields as string)?.split(",")?.join(" ") || "-__v";
+    const fields =
+      (this.query.fields as string)?.split(",")?.join(" ") || "-__v";
     this.modelQuery = this.modelQuery.select(fields);
     return this;
   }
 }
 
 export default QueryBuilder;
+
+// case "price-asc":
+//   sortBy = "discountPrice";
+//   break;
+// case "price-desc":
+//   sortBy = "-discountPrice";
