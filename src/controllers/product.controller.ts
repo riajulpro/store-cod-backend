@@ -65,6 +65,17 @@ export const createProductController = catchAsyncError(
 export const getAllProductsController = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+
+      const baseQueryBuilder = new QueryBuilder(Product.find(), req.query)
+        .search(["name", "brand"])
+        .filter();
+
+      const totalDocuments = await baseQueryBuilder.modelQuery.countDocuments();
+
+
+      console.log("aaa total", totalDocuments);
+      
+
       const queryBuilder = new QueryBuilder(Product.find(), req.query)
         .search(["name", "brand"])
         .filter()
@@ -74,13 +85,16 @@ export const getAllProductsController = catchAsyncError(
 
       const products = await queryBuilder.modelQuery;
 
+
       sendResponse(res, {
         statusCode: 200,
         success: true,
-        message: "Products fetched successfully",
+        message: "Products fetched successfully ff",
         data: products,
+        total: totalDocuments
       });
     } catch (error) {
+      console.log("Error fetching products:", error);
       sendResponse(res, {
         statusCode: 500,
         success: false,
