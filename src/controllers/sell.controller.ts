@@ -101,7 +101,7 @@ export const getAllSellsController = catchAsyncError(
         .paginate()
         .fields();
 
-      const sells = await queryBuilder.modelQuery;
+      const sells = await queryBuilder.modelQuery.populate("customer").populate("productId");
 
       sendResponse(res, {
         statusCode: 200,
