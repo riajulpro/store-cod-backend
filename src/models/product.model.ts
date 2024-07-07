@@ -10,7 +10,7 @@ const productSchema = new mongoose.Schema({
     required: true,
   },
   category: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: String,
     required: true,
     ref: "Category",
   },
@@ -33,10 +33,6 @@ const productSchema = new mongoose.Schema({
   brand: {
     type: String,
     required: true,
-  },
-  cell: {
-    type: String,
-    // required: true,
   },
   service: {
     type: Object,
