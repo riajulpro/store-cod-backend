@@ -18,10 +18,10 @@ export const createCategoryController = catchAsyncError(
       });
     }
 
-    const { label, value } = req.body;
+    const { label, value,image } = req.body;
 
     try {
-      const newCategory = await Category.create({ label, value });
+      const newCategory = await Category.create({ label, value, image });
 
       sendResponse(res, {
         statusCode: 201,
@@ -103,6 +103,8 @@ export const updateCategoryController = catchAsyncError(
     try {
       const { id } = req.params;
       const updateData = req.body;
+
+      console.log("sssssss", updateData)
 
       const updatedCategory = await Category.findByIdAndUpdate(id, updateData, {
         new: true,
