@@ -4,10 +4,12 @@ const reviewSchema = new mongoose.Schema({
   productId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
+    ref: "Product",
   },
   customerId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
+    ref: "Customer",
   },
   text: {
     type: String,
