@@ -10,8 +10,7 @@ export const isAuthenticatedUser = async (
 ) => {
   try {
     const getToken = req.header("Authorization");
-    // console.log(getToken);
-    // console.log(getToken);
+
     if (!getToken)
       return res.status(400).json({ msg: "Invalid Authentication." });
 
@@ -23,7 +22,7 @@ export const isAuthenticatedUser = async (
     // console.log("desss", decoded);
 
     if (!decoded)
-      return res.status(400).json({ msg: "Invalid Authentication." });
+      return res.status(401).json({ msg: "Invalid Authentication." });
 
     const user = await Authentication.findOne({ _id: decoded?.user?.userId }).select(
       "-password"
@@ -36,7 +35,7 @@ export const isAuthenticatedUser = async (
 
     next();
   } catch (err: any) {
-    return res.status(500).json({ msg: err.message });
+    return res.status(401).json({ msg: err.message });
   }
 };
 

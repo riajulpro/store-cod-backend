@@ -4,15 +4,15 @@ import http from "http";
 // import morgan from "morgan";
 import connectDB from "./config/db";
 
-import routes from "./routes/index";
 import errorMiddleware from "./middlewares/error";
+import routes from "./routes/index";
 
 const app: Application = express();
 
 // Apply CORS middleware
 app.use(
   cors({
-    origin: "*"
+    origin: "*",
   })
 );
 // app.use(morgan("dev"));
