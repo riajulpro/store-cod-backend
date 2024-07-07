@@ -27,9 +27,12 @@ export const createProductController = catchAsyncError(
       price,
       discountPrice,
       brand,
-      cell,
       service,
+      description,
     } = req.body;
+
+    console.log("aaaaaa", req.body);
+    
 
     try {
       const newProduct = await Product.create({
@@ -40,7 +43,7 @@ export const createProductController = catchAsyncError(
         price,
         discountPrice,
         brand,
-        cell,
+        description,
         service,
       });
 
@@ -65,16 +68,13 @@ export const createProductController = catchAsyncError(
 export const getAllProductsController = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-
       const baseQueryBuilder = new QueryBuilder(Product.find(), req.query)
         .search(["name", "brand"])
         .filter();
 
       const totalDocuments = await baseQueryBuilder.modelQuery.countDocuments();
 
-
-      console.log("aaa total", totalDocuments);
-      
+      // console.log("aaa total", totalDocuments);
 
       const queryBuilder = new QueryBuilder(Product.find(), req.query)
         .search(["name", "brand"])
@@ -83,15 +83,17 @@ export const getAllProductsController = catchAsyncError(
         .paginate()
         .fields();
 
-      const products = await queryBuilder.modelQuery;
-
+      const products = await queryBuilder.modelQuery
+        .populate("category")
+        .populate("brand")
+        .populate("tag");
 
       sendResponse(res, {
         statusCode: 200,
         success: true,
         message: "Products fetched successfully ff",
         data: products,
-        total: totalDocuments
+        total: totalDocuments,
       });
     } catch (error) {
       console.log("Error fetching products:", error);
@@ -110,7 +112,10 @@ export const getProductByIdController = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
-      const product = await Product.findById(id).populate("category", ["label", "value"]);
+      const product = await Product.findById(id).populate("category", [
+        "label",
+        "value",
+      ]);
 
       if (!product) {
         return sendResponse(res, {

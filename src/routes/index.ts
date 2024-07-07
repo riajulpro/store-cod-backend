@@ -6,6 +6,7 @@ import review from "./review.route";
 import sell from "./sell.route";
 import brand from "./brand.route";
 import tag from "./tag.route";
+import file from "./fileupload.route";
 const router = express.Router();
 
 const moduleRoute = [
@@ -36,6 +37,10 @@ const moduleRoute = [
   {
     path: "/tag",
     route: tag,
+  },
+  {
+    path: "/file",
+    route: file,
   },
 ];
 
