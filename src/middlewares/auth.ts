@@ -25,7 +25,7 @@ export const isAuthenticatedUser = async (
       return res.status(401).json({ message: "Invalid Authentication." });
 
     const user = await Authentication.findOne({
-      _id: decoded?.user?.userId,
+      _id: decoded?.user?.authId,
     }).select("-password");
     if (!user) return res.status(400).json({ message: "User does not exist." });
 
