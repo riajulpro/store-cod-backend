@@ -233,7 +233,9 @@ export const deleteSellController = catchAsyncError(
 export const getCustomerBasedSellsController = catchAsyncError(
   async (req, res) => {
     const userAuth = req.user;
+    console.log("fasdfasd");
     if (!userAuth) return res.status(204).send({});
+
     const isCustomerExist = await Customer.findOne({ email: userAuth.email });
     if (!isCustomerExist) {
       return sendResponse(res, {
@@ -243,15 +245,19 @@ export const getCustomerBasedSellsController = catchAsyncError(
         statusCode: 404,
       });
     }
-    const query = Sell.find({ customer: isCustomerExist._id })
+
+    const filterQuery = { customer: isCustomerExist._id };
+    const query = Sell.find(filterQuery)
       .populate("customer")
       .populate("productId");
+    const totalDoc = await Sell.countDocuments(filterQuery);
     const resultQuery = new QueryBuilder(query, req.query).paginate();
     const result = await resultQuery.modelQuery;
-    sendResponse(res, {
+    res.json({
       success: true,
       data: result || [],
       message: "Successfully retrive sells data",
+      totalDoc,
     });
   }
 );

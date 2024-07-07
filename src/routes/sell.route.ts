@@ -17,6 +17,6 @@ router.get("/:id", getSellByIdController);
 router.patch("/:id", updateSellController);
 router.delete("/:id", deleteSellController);
 // customer based sells/order
-router.get("/my-orders", isAuthenticatedUser, getCustomerBasedSellsController);
+router.get("/my/orders", isAuthenticatedUser, getCustomerBasedSellsController);
 
 export default router;
