@@ -23,6 +23,7 @@ export const isAuthenticatedUser = async (
 
     if (!decoded)
       return res.status(401).json({ message: "Invalid Authentication." });
+    console.log(decoded.user);
 
     const user = await Authentication.findOne({
       _id: decoded?.user?.authId,

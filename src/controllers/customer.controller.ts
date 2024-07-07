@@ -3,12 +3,12 @@ import Customer from "../models/customer.model";
 import sendResponse from "../utils/sendResponse";
 
 export const updateCustomerDetails = catchAsyncError(async (req, res) => {
-  const { body } = req.body;
+  const { body } = req;
   const user = req.user;
   if (!user) return res.status(204).json({});
   console.log({ user });
 
-  const isExistCustomer = await Customer.findById(user._id);
+  const isExistCustomer = await Customer.findOne({ email: user.email });
   if (!isExistCustomer) {
     return sendResponse(res, {
       success: false,
@@ -22,7 +22,7 @@ export const updateCustomerDetails = catchAsyncError(async (req, res) => {
     runValidators: true,
   });
   sendResponse(res, {
-    success: false,
+    success: true,
     message: "User details update successfull",
     data: result,
   });

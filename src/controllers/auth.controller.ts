@@ -68,7 +68,7 @@ export const genereteAccessToken = catchAsyncError(async (req, res) => {
     const user = (decoded as JwtPayload).user;
     const accessTOkenPayload = {
       email: user.email,
-      authId: user._id,
+      authId: user.authId,
       role: user.role,
     };
 
@@ -157,6 +157,8 @@ export const loginController = catchAsyncError(async (req, res) => {
     },
     "5s"
   );
+
+
 
   const refreshToken = createRefreshToken({
     email: isExistUser.email,
