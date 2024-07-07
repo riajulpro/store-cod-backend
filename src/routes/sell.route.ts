@@ -5,6 +5,7 @@ import {
   getAllSellsController,
   getCustomerBasedSellsController,
   getSellByIdController,
+  trackCustomerOrder,
   updateSellController,
 } from "../controllers/sell.controller";
 import { isAuthenticatedUser } from "../middlewares/auth";
@@ -18,5 +19,6 @@ router.patch("/:id", updateSellController);
 router.delete("/:id", deleteSellController);
 // customer based sells/order
 router.get("/my/orders", isAuthenticatedUser, getCustomerBasedSellsController);
+router.get("/my/order/:orderId", isAuthenticatedUser, trackCustomerOrder);
 
 export default router;

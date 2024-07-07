@@ -261,3 +261,36 @@ export const getCustomerBasedSellsController = catchAsyncError(
     });
   }
 );
+
+export const trackCustomerOrder = catchAsyncError(async (req, res) => {
+  const { orderId } = req.params;
+  const user = req.user;
+  if (!user) return res.status(204).send({});
+
+  const isExistOrder = await Sell.findById(orderId)
+    .populate("customer")
+    .populate("productId");
+  if (!isExistOrder) {
+    return sendResponse(res, {
+      success: false,
+      message: "Order not found",
+      data: null,
+    });
+  }
+
+  const orderObject: Record<string, any> = isExistOrder.toObject();
+  if (orderObject.customer.email !== user.email) {
+    return sendResponse(res, {
+      success: false,
+      message: "Order email didn't matched",
+      data: null,
+      statusCode: 403,
+    });
+  }
+
+  sendResponse(res, {
+    success: true,
+    message: "Order track retraive successfully",
+    data: orderObject,
+  });
+});

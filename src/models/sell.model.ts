@@ -4,7 +4,7 @@ const SellSchema = new mongoose.Schema({
   productId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
-    ref: "Product"
+    ref: "Product",
   },
   quantity: {
     type: String,
@@ -17,7 +17,14 @@ const SellSchema = new mongoose.Schema({
   customer: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
-    ref: "Customer"
+    ref: "Customer",
+  },
+
+  status: {
+    type: String,
+    required: false,
+    enum: ["Pending", "On the way", "Delivered"],
+    default: "Pending",
   },
 });
 

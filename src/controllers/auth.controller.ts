@@ -155,7 +155,7 @@ export const loginController = catchAsyncError(async (req, res) => {
       authId: isExistUser._id,
       role: isExistUser.role,
     },
-    "5s"
+    "1h"
   );
 
 

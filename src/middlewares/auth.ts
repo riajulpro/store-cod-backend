@@ -15,6 +15,9 @@ export const isAuthenticatedUser = async (
       return res.status(400).json({ message: "Invalid Authentication." });
 
     const token = getToken.split(" ")[1];
+    if (!token) {
+      return res.status(400).json({ message: "Token not provided" });
+    }
     const decoded: any = jwt.verify(
       token,
       process.env.JWT_ACCESS_SECRET as string
