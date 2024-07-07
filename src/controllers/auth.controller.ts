@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 
 import catchAsyncError from "../middlewares/catchAsyncErrors";
 import Authentication from "../models/auth.model";
@@ -34,13 +34,64 @@ export const createCustomerController = catchAsyncError(async (req, res) => {
     "1h"
   );
 
+  const refreshToken = createRefreshToken({
+    email: auth.email,
+    userId: auth._id,
+    role: auth.role,
+  });
+
   res.json({
     data: customer,
     message: "Customer created successfully",
     success: true,
     accessToken: token,
+    refreshToken,
   });
 });
+
+export const genereteAccessToken = catchAsyncError(async (req, res) => {
+  const getToken = req.header("Authorization");
+
+  if (!getToken)
+    return res.status(400).json({ msg: "Invalid Authentication." });
+
+  const refreshToken = getToken.split(" ")[1];
+  console.log({refreshToken});
+
+  const refreshTokenSecret = process.env.JWT_REFRESH_SECRET as string;
+
+  try {
+    const decoded = jwt.verify(refreshToken, refreshTokenSecret);
+    const user = (decoded as JwtPayload).user;
+    const accessTOkenPayload = {
+      email: user.email,
+      userId: user.userId,
+      role: user.role,
+    };
+
+    const isExistUser = await Authentication.findById(user.userId);
+    if (!isExistUser) {
+      return sendResponse(res, {
+        success: false,
+        data: null,
+        message: "User not found",
+        statusCode: 404,
+      });
+    }
+
+    const newAccessToken = createAcessToken(accessTOkenPayload, "1h");
+
+    sendResponse(res, {
+      success: true,
+      message: "Successfully retrive access token",
+      data: { accessToken: newAccessToken },
+    });
+  } catch (error) {
+    console.error("Error decoding or verifying refresh token:", error);
+    res.status(403).json({ message: "Invalid refresh token" });
+  }
+});
+
 export const createStaffController = catchAsyncError(async (req, res) => {
   const { body } = req;
   const auth = await Authentication.create({ ...body, role: "staff" });
@@ -101,7 +152,7 @@ export const loginController = catchAsyncError(async (req, res) => {
       userId: isExistUser._id,
       role: isExistUser.role,
     },
-    "1h"
+    "5s"
   );
 
   const refreshToken = createRefreshToken({
