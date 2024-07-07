@@ -7,12 +7,17 @@ import sell from "./sell.route";
 import brand from "./brand.route";
 import tag from "./tag.route";
 import file from "./fileupload.route";
+import customerRoute from "./customer.route";
 const router = express.Router();
 
 const moduleRoute = [
   {
     path: "/auth",
     route: authRoute,
+  },
+  {
+    path: "/customer",
+    route: customerRoute,
   },
   {
     path: "/category",

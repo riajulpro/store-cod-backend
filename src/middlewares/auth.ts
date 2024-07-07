@@ -1,7 +1,7 @@
 import { NextFunction, Response } from "express";
 import jwt from "jsonwebtoken";
-import ErrorHandler from "../utils/errorhandler";
 import Authentication from "../models/auth.model";
+import ErrorHandler from "../utils/errorhandler";
 
 export const isAuthenticatedUser = async (
   req: any,
@@ -12,7 +12,7 @@ export const isAuthenticatedUser = async (
     const getToken = req.header("Authorization");
 
     if (!getToken)
-      return res.status(400).json({ msg: "Invalid Authentication." });
+      return res.status(400).json({ message: "Invalid Authentication." });
 
     const token = getToken.split(" ")[1];
     const decoded: any = jwt.verify(
@@ -22,12 +22,13 @@ export const isAuthenticatedUser = async (
     // console.log("desss", decoded);
 
     if (!decoded)
-      return res.status(401).json({ msg: "Invalid Authentication." });
+      return res.status(401).json({ message: "Invalid Authentication." });
+    console.log(decoded.user);
 
-    const user = await Authentication.findOne({ _id: decoded?.user?.userId }).select(
-      "-password"
-    );
-    if (!user) return res.status(400).json({ msg: "User does not exist." });
+    const user = await Authentication.findOne({
+      _id: decoded?.user?.authId,
+    }).select("-password");
+    if (!user) return res.status(400).json({ message: "User does not exist." });
 
     // console.log("user =======", user);
 
@@ -35,7 +36,7 @@ export const isAuthenticatedUser = async (
 
     next();
   } catch (err: any) {
-    return res.status(401).json({ msg: err.message });
+    return res.status(401).json({ message: err.message });
   }
 };
 

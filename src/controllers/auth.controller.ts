@@ -9,7 +9,10 @@ import Staff from "../models/staff.model";
 import { createAcessToken, createRefreshToken } from "../utils/jwtToken";
 import sendMessage from "../utils/sendMessage";
 import sendResponse from "../utils/sendResponse";
-
+export const authSateController = catchAsyncError(async (req, res) => {
+  const user = req.user;
+  res.json({ success: true, message: "User state get", data: user });
+});
 export const createCustomerController = catchAsyncError(async (req, res) => {
   const { body } = req;
 
@@ -28,7 +31,7 @@ export const createCustomerController = catchAsyncError(async (req, res) => {
   const token = createAcessToken(
     {
       email: auth.email,
-      userId: auth._id,
+      authId: auth._id,
       role: auth.role,
     },
     "1h"
@@ -36,7 +39,7 @@ export const createCustomerController = catchAsyncError(async (req, res) => {
 
   const refreshToken = createRefreshToken({
     email: auth.email,
-    userId: auth._id,
+    authId: auth._id,
     role: auth.role,
   });
 
@@ -56,7 +59,7 @@ export const genereteAccessToken = catchAsyncError(async (req, res) => {
     return res.status(400).json({ msg: "Invalid Authentication." });
 
   const refreshToken = getToken.split(" ")[1];
-  console.log({refreshToken});
+  console.log({ refreshToken });
 
   const refreshTokenSecret = process.env.JWT_REFRESH_SECRET as string;
 
@@ -65,11 +68,11 @@ export const genereteAccessToken = catchAsyncError(async (req, res) => {
     const user = (decoded as JwtPayload).user;
     const accessTOkenPayload = {
       email: user.email,
-      userId: user.userId,
+      authId: user.authId,
       role: user.role,
     };
 
-    const isExistUser = await Authentication.findById(user.userId);
+    const isExistUser = await Authentication.findById(user.authId);
     if (!isExistUser) {
       return sendResponse(res, {
         success: false,
@@ -99,7 +102,7 @@ export const createStaffController = catchAsyncError(async (req, res) => {
   const token = createAcessToken(
     {
       email: auth.email,
-      userId: auth._id,
+      _id: auth._id,
       role: auth.role,
     },
     "1h"
@@ -149,19 +152,24 @@ export const loginController = catchAsyncError(async (req, res) => {
   const token = createAcessToken(
     {
       email: isExistUser.email,
-      userId: isExistUser._id,
+      authId: isExistUser._id,
       role: isExistUser.role,
     },
     "5s"
   );
 
+
+
   const refreshToken = createRefreshToken({
     email: isExistUser.email,
-    userId: isExistUser._id,
+    authId: isExistUser._id,
     role: isExistUser.role,
   });
+
+  const userOBj = user?.toObject() || {};
+
   res.json({
-    data: { ...user, role: isExistUser.role },
+    data: { ...userOBj, role: isExistUser.role },
     message: "Login successfull",
     success: true,
     accessToken: token,
@@ -315,7 +323,7 @@ export const recoverPassword = catchAsyncError(async (req, res) => {
   user.password = hashedPassword;
   const tokenPayload = {
     email: user.email,
-    userId: user._id,
+    _id: user._id,
     role: user.role,
   };
 
