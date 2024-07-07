@@ -1,96 +1,96 @@
-import { Request, Response, NextFunction } from "express";
-import catchAsyncError from "../middlewares/catchAsyncErrors";
-import Sell from "../models/sell.model";
-import Product from "../models/product.model";
-import Customer from "../models/customer.model";
-import sendResponse from "../utils/sendResponse";
+import { NextFunction, Request, Response } from "express";
 import { validationResult } from "express-validator";
 import QueryBuilder from "../builder/QueryBuilder";
+import catchAsyncError from "../middlewares/catchAsyncErrors";
+import Customer from "../models/customer.model";
+import Product from "../models/product.model";
+import Sell from "../models/sell.model";
+import sendResponse from "../utils/sendResponse";
 
 export const createSellController = catchAsyncError(
-    async (req: Request, res: Response, next: NextFunction) => {
-      const errors = validationResult(req);
-  
-      if (!errors.isEmpty()) {
-        const firstError = errors.array().map((error) => error.msg)[0];
-        return sendResponse(res, {
-          statusCode: 422,
-          success: false,
-          message: firstError,
-          data: null,
-        });
-      }
-  
-      const { productId, quantity, date, customer } = req.body;
-  
-      try {
-        const product = await Product.findById(productId);
-        const customerExists = await Customer.findById(customer);
-  
-        if (!product) {
-          return sendResponse(res, {
-            statusCode: 404,
-            success: false,
-            message: "Product not found",
-            data: null,
-          });
-        }
-  
-        if (!customerExists) {
-          return sendResponse(res, {
-            statusCode: 404,
-            success: false,
-            message: "Customer not found",
-            data: null,
-          });
-        }
-  
-        const quantityNumber = parseInt(quantity, 10);
-        if (isNaN(quantityNumber) || quantityNumber <= 0) {
-          return sendResponse(res, {
-            statusCode: 400,
-            success: false,
-            message: "Invalid quantity",
-            data: null,
-          });
-        }
-  
-        if (product.stock < quantityNumber) {
-          return sendResponse(res, {
-            statusCode: 400,
-            success: false,
-            message: "Insufficient stock",
-            data: null,
-          });
-        }
-  
-        product.stock -= quantityNumber;
-        await product.save();
-  
-        const newSell = await Sell.create({
-          productId,
-          quantity: quantityNumber,
-          date,
-          customer,
-        });
-  
-        sendResponse(res, {
-          statusCode: 201,
-          success: true,
-          message: "Sell created successfully",
-          data: newSell,
-        });
-      } catch (error) {
-        sendResponse(res, {
-          statusCode: 500,
-          success: false,
-          message: "Error creating sell",
-          data: null,
-          error: error,
-        });
-      }
+  async (req: Request, res: Response, next: NextFunction) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      const firstError = errors.array().map((error) => error.msg)[0];
+      return sendResponse(res, {
+        statusCode: 422,
+        success: false,
+        message: firstError,
+        data: null,
+      });
     }
-  );
+
+    const { productId, quantity, date, customer } = req.body;
+
+    try {
+      const product = await Product.findById(productId);
+      const customerExists = await Customer.findById(customer);
+
+      if (!product) {
+        return sendResponse(res, {
+          statusCode: 404,
+          success: false,
+          message: "Product not found",
+          data: null,
+        });
+      }
+
+      if (!customerExists) {
+        return sendResponse(res, {
+          statusCode: 404,
+          success: false,
+          message: "Customer not found",
+          data: null,
+        });
+      }
+
+      const quantityNumber = parseInt(quantity, 10);
+      if (isNaN(quantityNumber) || quantityNumber <= 0) {
+        return sendResponse(res, {
+          statusCode: 400,
+          success: false,
+          message: "Invalid quantity",
+          data: null,
+        });
+      }
+
+      if (product.stock < quantityNumber) {
+        return sendResponse(res, {
+          statusCode: 400,
+          success: false,
+          message: "Insufficient stock",
+          data: null,
+        });
+      }
+
+      product.stock -= quantityNumber;
+      await product.save();
+
+      const newSell = await Sell.create({
+        productId,
+        quantity: quantityNumber,
+        date,
+        customer,
+      });
+
+      sendResponse(res, {
+        statusCode: 201,
+        success: true,
+        message: "Sell created successfully",
+        data: newSell,
+      });
+    } catch (error) {
+      sendResponse(res, {
+        statusCode: 500,
+        success: false,
+        message: "Error creating sell",
+        data: null,
+        error: error,
+      });
+    }
+  }
+);
 
 export const getAllSellsController = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -101,7 +101,9 @@ export const getAllSellsController = catchAsyncError(
         .paginate()
         .fields();
 
-      const sells = await queryBuilder.modelQuery.populate("customer").populate("productId");
+      const sells = await queryBuilder.modelQuery
+        .populate("customer")
+        .populate("productId");
 
       sendResponse(res, {
         statusCode: 200,
@@ -225,5 +227,31 @@ export const deleteSellController = catchAsyncError(
         error: error,
       });
     }
+  }
+);
+
+export const getCustomerBasedSellsController = catchAsyncError(
+  async (req, res) => {
+    const userAuth = req.user;
+    if (!userAuth) return res.status(204).send({});
+    const isCustomerExist = await Customer.findOne({ email: userAuth.email });
+    if (!isCustomerExist) {
+      return sendResponse(res, {
+        data: null,
+        message: "Customer not found",
+        success: false,
+        statusCode: 404,
+      });
+    }
+    const query = Sell.find({ customer: isCustomerExist._id })
+      .populate("customer")
+      .populate("productId");
+    const resultQuery = new QueryBuilder(query, req.query).paginate();
+    const result = await resultQuery.modelQuery;
+    sendResponse(res, {
+      success: true,
+      data: result || [],
+      message: "Successfully retrive sells data",
+    });
   }
 );
