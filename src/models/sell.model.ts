@@ -12,6 +12,10 @@ const SellSchema = new mongoose.Schema({
         type: String,
         required: true,
       },
+<<<<<<< HEAD
+=======
+      
+>>>>>>> 17945ab9a95e1369d9ac2255c85a4b5df292cd5c
     },
   ],
   totalAmount: {
@@ -38,7 +42,11 @@ const SellSchema = new mongoose.Schema({
   status: {
     type: String,
     required: false,
+<<<<<<< HEAD
     enum: ["Pending", "On the way", "Delivered"],
+=======
+    enum: ["Pending", "On the way", "Delivered", "Cancelled"],
+>>>>>>> 17945ab9a95e1369d9ac2255c85a4b5df292cd5c
     default: "Pending",
   },
 });
