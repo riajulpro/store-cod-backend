@@ -21,58 +21,8 @@ export const createSellController = catchAsyncError(
       });
     }
 
-    const { productId, quantity, date, customer } = req.body;
-
     try {
-      const product = await Product.findById(productId);
-      const customerExists = await Customer.findById(customer);
-
-      if (!product) {
-        return sendResponse(res, {
-          statusCode: 404,
-          success: false,
-          message: "Product not found",
-          data: null,
-        });
-      }
-
-      if (!customerExists) {
-        return sendResponse(res, {
-          statusCode: 404,
-          success: false,
-          message: "Customer not found",
-          data: null,
-        });
-      }
-
-      const quantityNumber = parseInt(quantity, 10);
-      if (isNaN(quantityNumber) || quantityNumber <= 0) {
-        return sendResponse(res, {
-          statusCode: 400,
-          success: false,
-          message: "Invalid quantity",
-          data: null,
-        });
-      }
-
-      if (product.stock < quantityNumber) {
-        return sendResponse(res, {
-          statusCode: 400,
-          success: false,
-          message: "Insufficient stock",
-          data: null,
-        });
-      }
-
-      product.stock -= quantityNumber;
-      await product.save();
-
-      const newSell = await Sell.create({
-        productId,
-        quantity: quantityNumber,
-        date,
-        customer,
-      });
+      const newSell = await Sell.create({});
 
       sendResponse(res, {
         statusCode: 201,
