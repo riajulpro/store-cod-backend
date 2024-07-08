@@ -1,11 +1,10 @@
 import { NextFunction, Request, Response } from "express";
 import { validationResult } from "express-validator";
-import QueryBuilder from "../builder/QueryBuilder";
 import catchAsyncError from "../middlewares/catchAsyncErrors";
-import Product from "../models/product.model";
+import Tag from "../models/tag.model";
 import sendResponse from "../utils/sendResponse";
 
-export const createProductController = catchAsyncError(
+export const createTagController = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const errors = validationResult(req);
 
@@ -19,45 +18,22 @@ export const createProductController = catchAsyncError(
       });
     }
 
-    const {
-      name,
-      photo,
-      category,
-      stock,
-      price,
-      discountPrice,
-      brand,
-      service,
-      description,
-    } = req.body;
-
-    console.log("aaaaaa", req.body);
-    
+    const { label, value, image } = req.body;
 
     try {
-      const newProduct = await Product.create({
-        name,
-        photo,
-        category,
-        stock,
-        price,
-        discountPrice,
-        brand,
-        description,
-        service,
-      });
+      const newTag = await Tag.create({ label, value, image });
 
       sendResponse(res, {
         statusCode: 201,
         success: true,
-        message: "Product created successfully",
-        data: newProduct,
+        message: "Tag created successfully",
+        data: newTag,
       });
     } catch (error) {
       sendResponse(res, {
         statusCode: 500,
         success: false,
-        message: "Error creating product",
+        message: "Error creating tag",
         data: null,
         error: error,
       });
@@ -65,42 +41,22 @@ export const createProductController = catchAsyncError(
   }
 );
 
-export const getAllProductsController = catchAsyncError(
+export const getAllTagsController = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const baseQueryBuilder = new QueryBuilder(Product.find(), req.query)
-        .search(["name", "brand"])
-        .filter();
-
-      const totalDocuments = await baseQueryBuilder.modelQuery.countDocuments();
-
-      // console.log("aaa total", totalDocuments);
-
-      const queryBuilder = new QueryBuilder(Product.find(), req.query)
-        .search(["name", "brand"])
-        .filter()
-        .sort()
-        .paginate()
-        .fields();
-
-      const products = await queryBuilder.modelQuery
-        .populate("category")
-        .populate("brand")
-        .populate("tag");
+      const tags = await Tag.find();
 
       sendResponse(res, {
         statusCode: 200,
         success: true,
-        message: "Products fetched successfully ff",
-        data: products,
-        total: totalDocuments,
+        message: "Tags fetched successfully",
+        data: tags,
       });
     } catch (error) {
-      console.log("Error fetching products:", error);
       sendResponse(res, {
         statusCode: 500,
         success: false,
-        message: "Error fetching products",
+        message: "Error fetching tags",
         data: null,
         error: error,
       });
@@ -108,20 +64,17 @@ export const getAllProductsController = catchAsyncError(
   }
 );
 
-export const getProductByIdController = catchAsyncError(
+export const getTagByIdController = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
-      const product = await Product.findById(id).populate("category", [
-        "label",
-        "value",
-      ]);
+      const tag = await Tag.findById(id);
 
-      if (!product) {
+      if (!tag) {
         return sendResponse(res, {
           statusCode: 404,
           success: false,
-          message: "Product not found",
+          message: "Tag not found",
           data: null,
         });
       }
@@ -129,14 +82,14 @@ export const getProductByIdController = catchAsyncError(
       sendResponse(res, {
         statusCode: 200,
         success: true,
-        message: "Product fetched successfully",
-        data: product,
+        message: "Tag fetched successfully",
+        data: tag,
       });
     } catch (error) {
       sendResponse(res, {
         statusCode: 500,
         success: false,
-        message: "Error fetching product",
+        message: "Error fetching tag",
         data: null,
         error: error,
       });
@@ -144,22 +97,22 @@ export const getProductByIdController = catchAsyncError(
   }
 );
 
-export const updateProductController = catchAsyncError(
+export const updateTagController = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
       const updateData = req.body;
 
-      const updatedProduct = await Product.findByIdAndUpdate(id, updateData, {
+      const updatedTag = await Tag.findByIdAndUpdate(id, updateData, {
         new: true,
         runValidators: true,
       });
 
-      if (!updatedProduct) {
+      if (!updatedTag) {
         return sendResponse(res, {
           statusCode: 404,
           success: false,
-          message: "Product not found",
+          message: "Tag not found",
           data: null,
         });
       }
@@ -167,14 +120,14 @@ export const updateProductController = catchAsyncError(
       sendResponse(res, {
         statusCode: 200,
         success: true,
-        message: "Product updated successfully",
-        data: updatedProduct,
+        message: "Tag updated successfully",
+        data: updatedTag,
       });
     } catch (error) {
       sendResponse(res, {
         statusCode: 500,
         success: false,
-        message: "Error updating product",
+        message: "Error updating tag",
         data: null,
         error: error,
       });
@@ -182,18 +135,18 @@ export const updateProductController = catchAsyncError(
   }
 );
 
-export const deleteProductController = catchAsyncError(
+export const deleteTagController = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
 
-      const deletedProduct = await Product.findByIdAndDelete(id);
+      const deletedTag = await Tag.findByIdAndDelete(id);
 
-      if (!deletedProduct) {
+      if (!deletedTag) {
         return sendResponse(res, {
           statusCode: 404,
           success: false,
-          message: "Product not found",
+          message: "Tag not found",
           data: null,
         });
       }
@@ -201,14 +154,14 @@ export const deleteProductController = catchAsyncError(
       sendResponse(res, {
         statusCode: 200,
         success: true,
-        message: "Product deleted successfully",
-        data: deletedProduct,
+        message: "Tag deleted successfully",
+        data: deletedTag,
       });
     } catch (error) {
       sendResponse(res, {
         statusCode: 500,
         success: false,
-        message: "Error deleting product",
+        message: "Error deleting tag",
         data: null,
         error: error,
       });

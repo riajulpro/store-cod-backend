@@ -4,7 +4,11 @@ import category from "./category.route";
 import products from "./product.route";
 import review from "./review.route";
 import sell from "./sell.route";
+import brand from "./brand.route";
+import tag from "./tag.route";
+import file from "./fileupload.route";
 import customerRoute from "./customer.route";
+import paymentRoutes from "./payment.route";
 const router = express.Router();
 
 const moduleRoute = [
@@ -31,6 +35,22 @@ const moduleRoute = [
   {
     path: "/sell",
     route: sell,
+  },
+  {
+    path: "/brand",
+    route: brand,
+  },
+  {
+    path: "/tag",
+    route: tag,
+  },
+  {
+    path: "/file",
+    route: file,
+  },
+  {
+    path: "/payment",
+    route: paymentRoutes,
   },
 ];
 
