@@ -12,16 +12,8 @@ const SellSchema = new mongoose.Schema({
         type: String,
         required: true,
       },
-<<<<<<< HEAD
-=======
-      
->>>>>>> 17945ab9a95e1369d9ac2255c85a4b5df292cd5c
     },
   ],
-  totalAmount: {
-    type: Number,
-    required: true,
-  },
   paymentMethod: {
     type: String,
     required: true,
@@ -29,6 +21,10 @@ const SellSchema = new mongoose.Schema({
   paymentStatus: {
     type: String,
     default: "unpaid",
+  },
+  totalAmount: {
+    type: Number,
+    required: true,
   },
   customer: {
     type: mongoose.Schema.Types.ObjectId,
@@ -42,11 +38,7 @@ const SellSchema = new mongoose.Schema({
   status: {
     type: String,
     required: false,
-<<<<<<< HEAD
-    enum: ["Pending", "On the way", "Delivered"],
-=======
     enum: ["Pending", "On the way", "Delivered", "Cancelled"],
->>>>>>> 17945ab9a95e1369d9ac2255c85a4b5df292cd5c
     default: "Pending",
   },
 });
