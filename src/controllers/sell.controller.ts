@@ -21,20 +21,10 @@ export const createSellController = catchAsyncError(
       });
     }
 
-    const { productId, quantity, date, customer } = req.body;
+    const { sellData, totalAmount, paymentMethod, paymentStatus, customer, date, status } = req.body;
 
     try {
-      const product = await Product.findById(productId);
       const customerExists = await Customer.findById(customer);
-
-      if (!product) {
-        return sendResponse(res, {
-          statusCode: 404,
-          success: false,
-          message: "Product not found",
-          data: null,
-        });
-      }
 
       if (!customerExists) {
         return sendResponse(res, {
@@ -45,33 +35,50 @@ export const createSellController = catchAsyncError(
         });
       }
 
-      const quantityNumber = parseInt(quantity, 10);
-      if (isNaN(quantityNumber) || quantityNumber <= 0) {
-        return sendResponse(res, {
-          statusCode: 400,
-          success: false,
-          message: "Invalid quantity",
-          data: null,
-        });
-      }
+      for (const item of sellData) {
+        const { productId, quantity } = item;
+        const product = await Product.findById(productId);
 
-      if (product.stock < quantityNumber) {
-        return sendResponse(res, {
-          statusCode: 400,
-          success: false,
-          message: "Insufficient stock",
-          data: null,
-        });
-      }
+        if (!product) {
+          return sendResponse(res, {
+            statusCode: 404,
+            success: false,
+            message: "Product not found",
+            data: null,
+          });
+        }
 
-      product.stock -= quantityNumber;
-      await product.save();
+        const quantityNumber = parseInt(quantity, 10);
+        if (isNaN(quantityNumber) || quantityNumber <= 0) {
+          return sendResponse(res, {
+            statusCode: 400,
+            success: false,
+            message: "Invalid quantity",
+            data: null,
+          });
+        }
+
+        if (product.stock < quantityNumber) {
+          return sendResponse(res, {
+            statusCode: 400,
+            success: false,
+            message: "Insufficient stock",
+            data: null,
+          });
+        }
+
+        product.stock -= quantityNumber;
+        await product.save();
+      }
 
       const newSell = await Sell.create({
-        productId,
-        quantity: quantityNumber,
-        date,
+        sellData,
+        totalAmount,
+        paymentMethod,
+        paymentStatus,
         customer,
+        date,
+        status,
       });
 
       sendResponse(res, {
@@ -103,7 +110,7 @@ export const getAllSellsController = catchAsyncError(
 
       const sells = await queryBuilder.modelQuery
         .populate("customer")
-        .populate("productId");
+        .populate("sellData.productId");
 
       sendResponse(res, {
         statusCode: 200,
@@ -128,7 +135,7 @@ export const getSellByIdController = catchAsyncError(
     try {
       const { id } = req.params;
       const sell = await Sell.findById(id)
-        .populate("productId")
+        .populate("sellData.productId")
         .populate("customer");
 
       if (!sell) {
@@ -167,7 +174,9 @@ export const updateSellController = catchAsyncError(
       const updatedSell = await Sell.findByIdAndUpdate(id, updateData, {
         new: true,
         runValidators: true,
-      });
+      })
+        .populate("sellData.productId")
+        .populate("customer");
 
       if (!updatedSell) {
         return sendResponse(res, {
@@ -201,7 +210,9 @@ export const deleteSellController = catchAsyncError(
     try {
       const { id } = req.params;
 
-      const deletedSell = await Sell.findByIdAndDelete(id);
+      const deletedSell = await Sell.findByIdAndDelete(id)
+        .populate("sellData.productId")
+        .populate("customer");
 
       if (!deletedSell) {
         return sendResponse(res, {
@@ -245,13 +256,106 @@ export const getCustomerBasedSellsController = catchAsyncError(
     }
     const query = Sell.find({ customer: isCustomerExist._id })
       .populate("customer")
-      .populate("productId");
+      .populate("sellData.productId");
     const resultQuery = new QueryBuilder(query, req.query).paginate();
     const result = await resultQuery.modelQuery;
     sendResponse(res, {
       success: true,
       data: result || [],
-      message: "Successfully retrive sells data",
+      message: "Successfully retrieved sells data",
     });
   }
 );
+
+export const getGenerateYearlyEarnings = catchAsyncError(async (req, res) => {
+  try {
+    const yearlyEarnings = await Sell.aggregate([
+      {
+        $addFields: {
+          date: { $toDate: "$date" }, 
+        },
+      },
+      {
+        $unwind: "$sellData",
+      },
+      {
+        $match: {
+          status: "Delivered", 
+        },
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$date" },
+            month: { $month: "$date" },
+            productId: "$sellData.productId",
+          },
+          totalRevenue: { $sum: { $toInt: "$sellData.quantity" } },
+          totalNetIncome: { $sum: 1 },
+        },
+      },
+      {
+        $group: {
+          _id: "$_id.year",
+          months: {
+            $push: {
+              month: "$_id.month",
+              revenue: "$totalRevenue",
+              netIncome: "$totalNetIncome",
+            },
+          },
+          totalRevenue: { $sum: "$totalRevenue" },
+          totalNetIncome: { $sum: "$totalNetIncome" },
+        },
+      },
+      {
+        $sort: { _id: 1 },
+      },
+    ]);
+
+    const formattedData = yearlyEarnings.map((item) => ({
+      year: item._id,
+      totalRevenue: item.totalRevenue,
+      totalNetIncome: item.totalNetIncome,
+      months: item.months.map(
+        (month: { month: number; revenue: any; netIncome: any }) => ({
+          month: getMonthName(month.month),
+          revenue: month.revenue,
+          netIncome: month.netIncome,
+        })
+      ),
+    }));
+
+    res.json({
+      success: true,
+      message: "Yearly earnings fetched successfully",
+      data: formattedData,
+    });
+  } catch (err) {
+    console.error("Error generating yearly earnings:", err);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching sell",
+      data: null,
+      error: err,
+    });
+  }
+});
+
+const getMonthName = (monthNum: number) => {
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+  return months[monthNum - 1];
+};
