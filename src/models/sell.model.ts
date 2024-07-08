@@ -12,15 +12,6 @@ const SellSchema = new mongoose.Schema({
         type: String,
         required: true,
       },
-      date: {
-        type: Date,
-        required: true,
-      },
-      customer: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true,
-        ref: "Customer",
-      },
     },
   ],
   totalAmount: {
@@ -34,6 +25,15 @@ const SellSchema = new mongoose.Schema({
   paymentStatus: {
     type: String,
     default: "unpaid",
+  },
+  customer: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: "Customer",
+  },
+  date: {
+    type: Date,
+    required: true,
   },
   status: {
     type: String,

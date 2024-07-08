@@ -9,25 +9,13 @@ import sendResponse from "../utils/sendResponse";
 
 export const createSellController = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      const firstError = errors.array().map((error) => error.msg)[0];
-      return sendResponse(res, {
-        statusCode: 422,
-        success: false,
-        message: firstError,
-        data: null,
-      });
-    }
-
     try {
-      const newSell = await Sell.create({});
+      const newSell = await Sell.create(req.body);
 
       sendResponse(res, {
         statusCode: 201,
         success: true,
-        message: "Sell created successfully",
+        message: "Order created successfully",
         data: newSell,
       });
     } catch (error) {
