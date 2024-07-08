@@ -7,6 +7,7 @@ import {
   getCustomerBasedSellsController,
   getSellByIdController,
   updateSellController,
+  trackCustomerOrder,
 } from "../controllers/sell.controller";
 import { isAuthenticatedUser } from "../middlewares/auth";
 
@@ -17,6 +18,8 @@ router.get("/", getAllSellsController);
 router.get("/:id", getSellByIdController);
 router.patch("/:id", updateSellController);
 router.delete("/:id", deleteSellController);
+router.get("/my/orders", isAuthenticatedUser, getCustomerBasedSellsController);
+router.get("/my/order/:orderId", isAuthenticatedUser, trackCustomerOrder);
 router.get("/earning/get", getGenerateYearlyEarnings);
 router.get("/my-orders", isAuthenticatedUser, getCustomerBasedSellsController);
 
